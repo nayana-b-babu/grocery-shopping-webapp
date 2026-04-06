@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orders - Grocery Store Admin</title>
+
+  <!-- Bootstrap CSS -->
+<link rel="stylesheet" href="../css/bootstrap.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/custom.css">
+
+</head>
+<body class="order-page">
+
+
+  <!-- Header -->
+  <header class="bg-warning text-dark text-center p-4">
+    <h1>Order Management</h1>
+    <p>Review and update customer orders</p>
+  </header>
+
+  <!-- Navigation -->
+<nav class="navbar navbar-light bg-light">
+  <div class="container">
+    <div class="d-flex">
+      <button class="nav-link btn btn-link me-3" onclick="location.href='index.html'">Dashboard<span style='font-size:20px;'>&#129534;</span></button>
+      <button class="nav-link btn btn-link me-3" onclick="location.href='manage-product.html'">Manage Products<span style='font-size:20px;'>&#129331;</span></button>
+      <button class="nav-link active btn btn-link" onclick="location.href='order.html'">Orders <span style="font-size: 20px;">&#128722;</span></button>
+    </div>
+  </div>
+</nav>
+
+
+  <!-- Main Content -->
+  <main class="container mt-4">
+
+    <!-- Place Order Form -->
+<div class="card mb-4">
+  <div class="card-header bg-success text-white">Place New Order</div>
+  <div class="card-body">
+    <form id="orderForm" class="row g-3">
+      <div class="col-md-4">
+        <input type="text" id="customerName" class="form-control" placeholder="Customer Name" required />
+      </div>
+      <div class="col-md-4">
+        <select id="productSelect" class="form-select" required></select>
+      </div>
+      <div class="col-md-2">
+        <input type="number" id="quantity" class="form-control" placeholder="Qty" min="1" required />
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Place Order</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+    <!-- Orders Table -->
+    <div class="card">
+      <div class="card-header bg-dark text-white">Customer Orders</div>
+      <div class="card-body p-0">
+        <table class="table table-striped mb-0" id="orderTable">
+          <thead class="table-light">
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Items</th>
+              <th>Total (₹)</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Orders will be populated here via order.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center bg-dark text-white py-3 mt-5">
+    &copy; 2025 Grocery Store Admin. All rights reserved.
+  </footer>
+
+  <!-- JS Scripts -->
+  <script src="../js/packages/jquery.min.js"></script>
+  <script src="../js/packages/bootstrap.min.js"></script>
+  <script src="../js/custom/common.js"></script>
+  <script src="../js/custom/dashboard.js"></script>
+  <script src="../js/custom/manage-product.js"></script>
+  <script src="../js/custom/order.js"></script>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const orderForm = document.getElementById("orderForm");
+    const customerInput = document.getElementById("customerName");
+    const productSelect = document.getElementById("productSelect");
+    const quantityInput = document.getElementById("quantity");
+
+    // Load product options into the select dropdown
+    fetch("http://localhost:5000/getProducts")
+      .then((res) => res.json())
+      .then((products) => {
+        productSelect.innerHTML = products
+          .map((p) => `<option value="${p.id}">${p.name}</option>`)
+          .join("");
+      });
+
+    // Handle order form submission
+    orderForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const orderData = {
+        customer_name: customerInput.value,
+        product_id: productSelect.value,
+        quantity: quantityInput.value
+      };
+
+      fetch("http://localhost:5000/orders", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(orderData)
+})
+  .then((res) => {
+    if (!res.ok) throw new Error("Failed to place order");
+    return res.json(); // parse JSON response
+  })
+  .then((data) => {
+    try {
+      alert("Order placed successfully!");
+      console.log("Clearing customer input");
+      customerInput.value = "";
+      console.log("Clearing quantity input");
+      quantityInput.value = "";
+      console.log("Calling loadOrdersFromAPI()");
+      loadOrdersFromAPI(); // this might throw
+    } catch (err) {
+      console.error("Client-side error after order placed:", err);
+      
+    }
+  })
+  .catch((err) => {
+    console.error("Server or fetch error:", err);
+    
+  });
+  });
+  });
+  </script>
+
+</body>
+</html>
+
